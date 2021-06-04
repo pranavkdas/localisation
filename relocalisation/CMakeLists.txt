@@ -155,6 +155,8 @@ add_executable(pcl_matching src/pcl_matching.cpp)
 add_executable(segmentation src/segmentation.cpp)
 add_executable(write src/write.cpp)
 add_executable(extractFeatures src/extractFeatures.cpp)
+add_executable(gps_dict src/gps_dict.cpp)
+add_executable(dict_make src/dict_make.py)
 
 
 
@@ -176,7 +178,8 @@ target_link_libraries(pcl_downsampling ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 target_link_libraries(pcl_matching ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 target_link_libraries(segmentation ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBRARIES})
 target_link_libraries(extractFeatures ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${OpenCV_LIBRARIES})
-
+target_link_libraries(gps_dict ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+target_link_libraries(dict_make ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 
 
 #############
