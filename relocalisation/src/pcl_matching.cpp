@@ -5,10 +5,18 @@
 #include <sensor_msgs/PointCloud2.h>
 
 #include <pcl/io/pcd_io.h>
+#include "pointmatcher/PointMatcher.h"
 
-pcl::PointCloud<pcl::PointXYZ> cloud_targ;
-pcl::PointCloud<pcl::PointXYZ> cloud_scan;
-pcl::PointCloud<pcl::PointXYZ> cloud_aligned;
+#include "pointmatcher_ros/point_cloud.h"
+#include "pointmatcher_ros/transform.h"
+#include "pointmatcher_ros/get_params_from_server.h"
+#include "pointmatcher_ros/ros_logger.h"
+
+// pcl::PointCloud<pcl::PointXYZ> cloud_scan;
+// pcl::PointCloud<pcl::PointXYZ> cloud_aligned;
+
+PointMatcher<float>::DataPoints scene;
+PointMatcher<float>::DataPoints object;
 
 class cloudHandler
 {
@@ -22,16 +30,18 @@ public:
 
     void cloudCB_targ(const sensor_msgs::PointCloud2 &input)
     {
-
-        pcl::fromROSMsg(input, cloud_targ);
+        // pcl::PointCloud<pcl::PointXYZ> cloud_targ;
+        // pcl::fromROSMsg(input, cloud_targ);
+        scene = PointMatcher_ros::rosMsgToPointMatcherCloud<float>(input, false);
 
     }
 
     void cloudCB_scan(const sensor_msgs::PointCloud2 &input)
     {
-        sensor_msgs::PointCloud2 output;
+        object = PointMatcher_ros::rosMsgToPointMatcherCloud<float>(input, false);
+        // sensor_msgs::PointCloud2 output;
 
-        pcl::fromROSMsg(input, cloud_scan);
+        // pcl::fromROSMsg(input, cloud_scan);
 
         // for (size_t i = 0; i < cloud_scan.points.size (); ++i)
         // {
@@ -46,7 +56,25 @@ public:
 
     void perform_icp()        
     {   
-        sensor_msgs::PointCloud2 output;
+        // sensor_msgs::PointCloud2 output;
+
+        // Libpointmatcher
+        sensor_msgs::PointCloud2 scene_Cloud_libpointmatcher;
+        PointMatcher<float>::DataPoints scene = PointMatcher_ros::rosMsgToPointMatcherCloud<float>(scene_Cloud_libpointmatcher, false);
+        sensor_msgs::PointCloud2 obj_Cloud_libpointmatcher;
+        PointMatcher<float>::DataPoints object = PointMatcher_ros::rosMsgToPointMatcherCloud<float>(obj_Cloud_libpointmatcher, false);
+
+        PointMatcher<float>::ICP icp;
+        icp.setDefault();
+        PointMatcher<float>::TransformationParameters T = icp(object, scene);
+
+        std::cout << "Transformation Matrix = \n" << T << std::endl;
+        PointMatcher<float>::DataPoints transformed_object(object);
+        icp.transformations.apply(transformed_object, T);
+
+        sensor_msgs::PointCloud2 transformed_pcd = PointMatcher_ros::pointMatcherCloudToRosMsg<float>(transformed_object, "/camera_frame_id", ros::Time::now());
+        
+        /////////////////////////////////////////////
 
         pcl::IterativeClosestPoint<pcl::PointXYZ, pcl::PointXYZ> icp;
         icp.setInputSource(cloud_scan.makeShared());
